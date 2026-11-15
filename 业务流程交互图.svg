@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 790" font-family="'Segoe UI','Microsoft YaHei',sans-serif">
+  <style>
+    .panel{fill:#ffffff;stroke:#d8d2c7;stroke-width:1.5;}
+    .phead{fill:#ece7df;stroke:#d8d2c7;stroke-width:1.5;}
+    .ptitle{fill:#2d2a27;font-size:15px;font-weight:700;}
+    .box{fill:#ffffff;stroke:#3f6b78;stroke-width:1.5;rx:6;}
+    .bbox{fill:#e3ecee;stroke:#3f6b78;stroke-width:1.5;rx:6;}
+    .bmain{fill:#2d2a27;font-size:13px;font-weight:600;}
+    .bsub{fill:#5c5650;font-size:11px;}
+    .arrow{stroke:#3f6b78;stroke-width:1.8;fill:none;}
+    .acc{fill:#3f6b78;font-size:12.5px;font-weight:700;}
+    .note{fill:#a86a4c;font-size:11.5px;}
+    .lyr{fill:#f4f1ea;stroke:#c9c2b6;stroke-width:1.2;rx:6;}
+    .ll{fill:#5c5650;font-size:10.5px;}
+    .llh{fill:#2d2a27;font-size:11px;font-weight:700;}
+    .ttl{fill:#2d2a27;font-size:17px;font-weight:700;}
+    .role{fill:#5c5650;font-size:12px;}
+  </style>
+
+  <text x="380" y="30" text-anchor="middle" class="ttl">phosphor-dbus-monitor</text>
+  <text x="380" y="50" text-anchor="middle" class="role">观察枢纽 / 规则层 · 声明式监控（YAML → pdmgen.py → generated.hpp），越界自动记日志/调方法</text>
+
+  <!-- Panel A 业务流程 -->
+  <rect class="panel" x="20" y="64" width="720" height="252" rx="6"/>
+  <rect class="phead" x="20" y="64" width="720" height="32" rx="6"/>
+  <text x="34" y="86" class="ptitle">一、业务流程：声明一条监控规则并自动响应</text>
+
+  <rect class="box" x="90" y="104" width="580" height="38" rx="6"/>
+  <text x="110" y="126" class="bmain">写 YAML（机器层 bbappend）：conditions + callbacks + watches</text>
+
+  <line class="arrow" x1="380" y1="142" x2="380" y2="156"/>
+  <polygon points="372,154 388,154 380,166" fill="#3f6b78"/>
+
+  <rect class="box" x="90" y="166" width="580" height="38" rx="6"/>
+  <text x="110" y="188" class="bmain">构建期 pdmgen.py 编译成 C++ generated.hpp（运行时不再解析）</text>
+
+  <line class="arrow" x1="380" y1="204" x2="380" y2="218"/>
+  <polygon points="372,216 388,216 380,228" fill="#3f6b78"/>
+
+  <rect class="bbox" x="90" y="228" width="580" height="72" rx="6"/>
+  <text x="110" y="248" class="bmain">运行时：PropertyWatch 监听 PropertiesChanged</text>
+  <text x="110" y="268" class="bsub">→ ConditionalCallback 求值条件（如 CountCondition 两遍求值）</text>
+  <text x="110" y="286" class="bsub">→ 触发动作：elog / journal / 调 D-Bus 方法 / 建 Events 对象</text>
+
+  <text x="700" y="160" text-anchor="end" class="note">Context 两态：</text>
+  <text x="700" y="176" text-anchor="end" class="note">START（开机全量）</text>
+  <text x="700" y="192" text-anchor="end" class="note">SIGNAL（信号触发）</text>
+  <text x="700" y="208" text-anchor="end" class="note">写条件两者都进</text>
+
+  <!-- Panel B 体系结构 -->
+  <rect class="panel" x="20" y="328" width="720" height="240" rx="6"/>
+  <rect class="phead" x="20" y="328" width="720" height="32" rx="6"/>
+  <text x="34" y="350" class="ptitle">二、代码体系结构：三层抽象 + 代码生成</text>
+
+  <rect class="lyr" x="60" y="370" width="210" height="170" rx="6"/>
+  <text x="74" y="390" class="llh">Watch（基类）</text>
+  <text x="74" y="410" class="ll">start() + callback(Context)</text>
+  <text x="74" y="430" class="ll">· PropertyWatch</text>
+  <text x="74" y="448" class="ll">  听 PropertiesChanged</text>
+  <text x="74" y="466" class="ll">· PathWatch</text>
+  <text x="74" y="484" class="ll">  听 InterfacesAdded</text>
+  <text x="74" y="504" class="ll">维护属性缓存</text>
+
+  <rect class="lyr" x="290" y="370" width="210" height="170" rx="6"/>
+  <text x="304" y="390" class="llh">ConditionalCallback</text>
+  <text x="304" y="410" class="ll">先求值 Conditional</text>
+  <text x="304" y="430" class="ll">· CountCondition:36</text>
+  <text x="304" y="448" class="ll">  两遍求值（propertyOp</text>
+  <text x="304" y="466" class="ll">  → countOp）表达</text>
+  <text x="304" y="484" class="ll">  "N 个里至少 M 个越界"</text>
+  <text x="304" y="504" class="ll">· oneshot 锁存防刷屏</text>
+
+  <rect class="lyr" x="520" y="370" width="200" height="170" rx="6"/>
+  <text x="534" y="390" class="llh">动作链 Callback</text>
+  <text x="534" y="410" class="ll">· elog&lt;&gt; → logging</text>
+  <text x="534" y="428" class="ll">· journal 写记录</text>
+  <text x="534" y="446" class="ll">· MethodInvoke 调方法</text>
+  <text x="534" y="464" class="ll">· EventManager 建事件</text>
+  <text x="534" y="482" class="ll">  对象并持久化</text>
+  <text x="534" y="502" class="ll">  （容量封顶 MAX_EVENTS）</text>
+
+  <!-- Panel C 交互 -->
+  <rect class="panel" x="20" y="580" width="720" height="150" rx="6"/>
+  <rect class="phead" x="20" y="580" width="720" height="32" rx="6"/>
+  <text x="34" y="602" class="ptitle">三、对外 D-Bus 交互</text>
+
+  <text x="40" y="630" class="acc">纯消费者 + 触发者（不持有业务状态）：</text>
+  <text x="40" y="650" class="ll">· 监听别的服务在 D-Bus 上的属性/信号（全总线观察）</text>
+
+  <text x="40" y="674" class="acc">触发时调用：</text>
+  <text x="40" y="694" class="ll">· xyz.openbmc_project.Logging.Create（记 error log）</text>
+  <text x="40" y="714" class="ll">· 别家的 D-Bus 方法（如控制某个服务）｜ 自建 xyz.openbmc_project.Events 对象</text>
+</svg>
